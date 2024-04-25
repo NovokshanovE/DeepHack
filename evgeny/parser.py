@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def parser(url: str = None):
+def parser(url: str = None) -> str:
     response = requests.get(url)
     # soup = BeautifulSoup(response.text, 'lxml')
     soup = BeautifulSoup(response.text, "html.parser")
@@ -14,7 +14,7 @@ def parser(url: str = None):
     return quotes
 
 
-def parser_links(text: str = ""):
+def parser_links(text: str = "") -> list[str]:
     url = f"https://arxiv.org/search/?query={text}&searchtype=all&source=header"
     
     response = requests.get(url)
