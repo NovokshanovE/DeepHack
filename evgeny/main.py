@@ -21,6 +21,10 @@
 #     print("Bot: ", res.content)
 
 
-from parser import parser
+from parser import parser, parser_links
 
-parser("https://arxiv.org/abs/2205.13504")
+links = parser_links("Math")
+
+print(links)
+
+print(parser(links[3]))
