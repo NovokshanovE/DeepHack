@@ -60,6 +60,7 @@ jupyter_client==8.6.1
 jupyter_core==5.7.2
 kubernetes==29.0.0
 langsmith==0.1.50
+lxml==5.2.1
 markdown-it-py==3.0.0
 marshmallow==3.21.1
 matplotlib-inline==0.1.7
