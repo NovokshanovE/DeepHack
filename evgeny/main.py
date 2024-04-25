@@ -21,6 +21,7 @@
 #     print("Bot: ", res.content)
 
 
+from os import link
 from parser import parser, parser_links
 
 links = parser_links("Math")
