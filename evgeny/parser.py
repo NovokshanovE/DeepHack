@@ -11,4 +11,4 @@ def parser(url: str = None):
     quotes = soup.find_all('blockquote', class_='abstract mathjax')
     # quotes = soup.find_all('span', class_='descriptor')
 
-    print(quotes)
+    return quotes
