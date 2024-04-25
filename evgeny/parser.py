@@ -8,10 +8,11 @@ def parser(url: str = None) -> str:
     response = requests.get(url)
     # soup = BeautifulSoup(response.text, 'lxml')
     soup = BeautifulSoup(response.text, "html.parser")
-    quotes = soup.find_all('blockquote', class_='abstract mathjax')
+    text = soup.find_all('blockquote', class_='abstract mathjax')
     # quotes = soup.find_all('span', class_='descriptor')
-
-    return quotes
+    title = str(soup.find_all('h1', class_='title mathjax')).split("</span>")[1].split("</h1>")[0]
+    
+    return {"title": title, "text": text}
 
 
 def parser_links(text: str = "") -> list[str]:
