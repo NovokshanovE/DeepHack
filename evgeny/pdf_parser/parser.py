@@ -14,6 +14,7 @@ from pdf2image import convert_from_path
 # Для удаления дополнительно созданных файлов
 import os
 def pdf_parser(pdf_path):
+    image_counter = 0
     
 
     # создаём объект файла PDF
@@ -21,6 +22,26 @@ def pdf_parser(pdf_path):
     # создаём объект считывателя PDF
     pdfReaded = PyPDF2.PdfReader(pdfFileObj)
     # Создаём функцию для извлечения текста
+    def crop_image(element, pageObj):
+        # Получаем координаты для вырезания изображения из PDF
+        [image_left, image_top, image_right, image_bottom] = [element.x0,element.y0,element.x1,element.y1] 
+        # Обрезаем страницу по координатам (left, bottom, right, top)
+        pageObj.mediabox.lower_left = (image_left, image_bottom)
+        pageObj.mediabox.upper_right = (image_right, image_top)
+        # Сохраняем обрезанную страницу в новый PDF
+        cropped_pdf_writer = PyPDF2.PdfWriter()
+        cropped_pdf_writer.add_page(pageObj)
+        # Сохраняем обрезанный PDF в новый файл
+        with open('cropped_image.pdf', 'wb') as cropped_pdf_file:
+            cropped_pdf_writer.write(cropped_pdf_file)
+
+    # Создаём функцию для преобразования PDF в изображения
+    def convert_to_images(input_file,):
+        images = convert_from_path(input_file)
+        image = images[0]
+        
+        output_file = f"image/PDF_image{image_counter}.png"
+        image.save(output_file, "PNG")
 
     def text_extraction(element):
         # Извлекаем текст из вложенного текстового элемента
@@ -121,19 +142,20 @@ def pdf_parser(pdf_path):
                     # Пропускаем текст, находящийся в таблице
                     pass
 
-            # # Проверяем элементы на наличие изображений
-            # if isinstance(element, LTFigure):
-            #     # Вырезаем изображение из PDF
-            #     crop_image(element, pageObj)
-            #     # Преобразуем обрезанный pdf в изображение
-            #     convert_to_images('cropped_image.pdf')
-            #     # Извлекаем текст из изображения
-            #     image_text = image_to_text('PDF_image.png')
-            #     text_from_images.append(image_text)
-            #     page_content.append(image_text)
-            #     # Добавляем условное обозначение в списки текста и формата
-            #     page_text.append('image')
-            #     line_format.append('image')
+            # Проверяем элементы на наличие изображений
+            if isinstance(element, LTFigure):
+                # Вырезаем изображение из PDF
+                image_counter+=1
+                crop_image(element, pageObj)
+                # Преобразуем обрезанный pdf в изображение
+                convert_to_images('cropped_image.pdf')
+                # Извлекаем текст из изображения
+                # image_text = image_to_text('PDF_image.png')
+                # text_from_images.append(image_text)
+                # page_content.append(image_text)
+                # Добавляем условное обозначение в списки текста и формата
+                page_text.append('image')
+                line_format.append('image')
 
             # Проверяем элементы на наличие таблиц
             if isinstance(element, LTRect):
@@ -177,8 +199,8 @@ def pdf_parser(pdf_path):
     pdfFileObj.close()
 
     # Удаляем созданные дополнительные файлы
-    # os.remove('cropped_image.pdf')
-    # os.remove('PDF_image.png')
+    os.remove('cropped_image.pdf')
+    os.remove('PDF_image.png')
 
     # Удаляем содержимое страницы
     # result = ''.join(text_per_page)
@@ -196,8 +218,9 @@ def parse_pdf_from_link(url):
     url = '/'.join(url.split('/')[:-2]+['pdf']+url.split('/')[-1:])
     
     filename = wget.download(url)
-    return pdf_parser(filename)
-
+    res = pdf_parser(filename)
+    os.remove(filename)
+    return res
 # print(pdf_parser("2404.15923v1.pdf"))
 
 print(parse_pdf_from_link('https://arxiv.org/abs/2404.15807'))
