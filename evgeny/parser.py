@@ -24,8 +24,7 @@ def parser(url: str = None) -> str:
     # quotes = soup.find_all('span', class_='descriptor')
     title = str(soup.find_all('h1', class_='title mathjax')).split("</span>")[1].split("</h1>")[0]
     
-    
-    return {"title": title, "text": text, "links": links}
+    return {"title": title, "text": str(text).split("</span>")[1].split("</blockquote>")[0], "links": links}
 
 
 def parser_links(text: str = "") -> list[str]:
