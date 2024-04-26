@@ -4,7 +4,7 @@ from langchain.chat_models.gigachat import GigaChat
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from PyPDF2 import PdfReader
+from PyPDF2 import PdfFileReader
 
 credentials = 'Yjg4MTQzMmUtNDAwMS00NDk0LThjOGUtNmU5ZWQ2YzQ4NDQ2OmQ4MWMxZGZiLTFmNGYtNDk5NS05OGQzLTBiMzYyYWJmNjk3OA=='
 llm = GigaChat(credentials=credentials, verify_ssl_certs=False, scope="GIGACHAT_API_CORP")
@@ -15,10 +15,10 @@ def parse_pdf_text_to_txt(pdf_filename, txt_filename):
     
     # Открытие PDF-файла для чтения
     with open(pdf_filename, "rb") as pdf_file:
-        pdf_reader = PdfReader(pdf_file)
+        pdf_reader = PdfFileReader(pdf_file)
         
         # Извлечение текста из каждой страницы
-        for page_num in range(pdf_reader.pages):
+        for page_num in range(pdf_reader.numPages):
             page = pdf_reader.getPage(page_num)
             page_text = page.extractText()
             extracted_text += page_text
