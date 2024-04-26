@@ -21,7 +21,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 
 
-def get_sources_links(llm: GigaChat, embeddings: GigaChatEmbeddings, text_splitter: RecursiveCharacterTextSplitter, prompt: str = "математика",) -> dict:
+def get_sources_links(llm: GigaChat, embeddings: GigaChatEmbeddings, text_splitter: RecursiveCharacterTextSplitter, prompt: str = "paper") -> list:
     clean_up()
     #prompt = translate_to_eng(llm, prompt, embeddings)
     links = parser_links(prompt)
@@ -40,7 +40,7 @@ def get_sources_links(llm: GigaChat, embeddings: GigaChatEmbeddings, text_splitt
         doc_index = find_doc_by_link(link, links)
         title = docs[doc_index]['title']
         outer_sources = docs[doc_index]['links']
-        annotation = docs[doc_index]['text']
+        annotation = translate_to_ru(llm, docs[doc_index]['text'], embeddings)
         result.append({
             "title": title,
             "link": link,
@@ -103,6 +103,11 @@ def translate_to_eng(llm: GigaChat, text: str, embeddings: GigaChatEmbeddings) -
     answer = llm([HumanMessage(content=question)]).content 
     return answer
   return text'''
+
+def translate_to_ru(llm: GigaChat, text: str, embeddings: GigaChatEmbeddings) -> str:
+    question = f"Переведи на русский: {text}"
+    answer = llm([HumanMessage(content=question)]).content 
+    return answer
     
 
 def sources_initialization(filenames: list, text_splitter: RecursiveCharacterTextSplitter):

@@ -13,4 +13,4 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=50,
 )
 
-print(get_sources_links(llm, embeddings, text_splitter, "graph")[0])
+print(get_sources_links(llm, embeddings, text_splitter, "graph neural networks"))
