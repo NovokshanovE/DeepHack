@@ -18,15 +18,15 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 
 
-def get_sources_links(llm, prompt = "математика в машинном обучении"):
-    prompt = translate_to_eng(prompt, llm)
+def get_sources_links(llm: GigaChat, embeddings: GigaChatEmbeddings, text_splitter: RecursiveCharacterTextSplitter, prompt: str = "математика",) -> dict:
+    prompt = translate_to_eng(prompt, llm, embeddings)
     links = parser_links(prompt)
     docs = [parser(i) for i in links] # {"title": title, "text": text, "links": links}
     
     filenames = []
     for i, doc in enumerate(docs):
         filenames.append(encode_file(doc["text"], links[i])) # text == link
-    db = sources_initialization(filenames)
+    db = sources_initialization(filenames, text_splitter)
     
     result_docs = db.similarity_search(prompt, k=20)
     
@@ -45,14 +45,14 @@ def get_sources_links(llm, prompt = "математика в машинном о
     return result
     
     
-def encode_name(name):
+def encode_name(name:str) -> str:
     name = name.replace("/", "(")
     name = name.replace(".", "_")
     name = name.replace(":", ")")
     return name 
 
 
-def encode_file(doc, link):
+def encode_file(doc: str, link: str) -> str:
     name = link
     name = name.replace("/", "(")
     name = name.replace(".", "_")
@@ -62,7 +62,7 @@ def encode_file(doc, link):
     return f"docs/{name}.txt"
 
     
-def decode_link_from_file(file_name):
+def decode_link_from_file(file_name: str) -> str:
     name = file_name[len("docs/"):-len(".txt")]
     name = name.replace("(", "/")
     name = name.replace("_", ".")
@@ -70,11 +70,11 @@ def decode_link_from_file(file_name):
     return name
 
 
-def find_doc_by_link(link, links):
+def find_doc_by_link(link: str, links: list) -> int:
     return links.index(link)
 
 
-def detect_language(llm, text):
+def detect_language(llm: GigaChat, text: str) -> str:
   question = f"На каком языке? {text[:20]}"
   answer = llm([HumanMessage(content=question)]).content #[0:200]
   if "рус" in answer:
@@ -82,14 +82,14 @@ def detect_language(llm, text):
   return "en"
 
 
-def translate_to_eng(llm, text):
+def translate_to_eng(llm: GigaChat, text: str, embeddings: GigaChatEmbeddings) -> str:
   #if detect_language(text, llm) != "en":
   question = f"Переведи на английский. {text}"
   answer = llm([HumanMessage(content=question)]).content 
   return answer
     
 
-def sources_initialization(filenames: list):
+def sources_initialization(filenames: list, text_splitter: RecursiveCharacterTextSplitter):
     documents=[]
     for filename in filenames:
         loader = TextLoader(filename)
