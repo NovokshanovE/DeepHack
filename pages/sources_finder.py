@@ -45,7 +45,7 @@ if prompt := st.chat_input("Type keywords for your research"):
         
         #responce = get_sources_links(settings_init.llm, settings_init.embeddings, settings_init.text_splitter, prompt)[0]
         responce = get_sources_links(settings_init["llm"], settings_init["embeddings"], settings_init["text_splitter"], prompt)
-        bot_response = "Наиболее подходящие статьи по вашему запросу"
+        bot_response = "Наиболее подходящие статьи по вашему запросу\n\n\n\n"
         for i, resp in enumerate(responce):
             bot_response += f"**{i+1}){resp['title']}**\n\n{resp['link']}\n\n"
             #expander = st.expander("Аннотация:")

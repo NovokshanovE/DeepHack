@@ -33,7 +33,7 @@ def get_summarization(filename: str, llm: GigaChat):
     # Пример использования функции
     parse_pdf_text_to_txt(filename, "extracted_text.txt")
 
-    loader = TextLoader("extracted_text.txt")
+    loader = TextLoader("extracted_text.txt", encoding="utf-8")
     doc = loader.load()
 
     split_docs = RecursiveCharacterTextSplitter(chunk_size=8000, chunk_overlap=1500).split_documents(

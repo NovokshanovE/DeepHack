@@ -8,7 +8,7 @@ def run():
     )
 
     st.write("# Welcome to Science GigaChat Bot! 👋")
-    st.write("It can:\n* Find relevant papers for your research\n* Summarize the paper and show it's visual content\n* Format the paper for the list of references \n* Generate LaTex code by images and tables")
+    st.write("It can:\n* Find relevant papers for your research\n* Summarize the paper and show it's visual content")
 
     st.sidebar.success("Select a mode above")
     
