@@ -1,0 +1,415 @@
+{
+	"info": {
+		"_postman_id": "52bf7d83-c313-4517-9389-4d2eb361facd",
+		"name": "GigaChat API",
+		"description": "GigaChat API - мультимодальная нейросетевая модель. Умеет отвечать на вопросы, вести диалог и писать код\n\nДля начала использования в личном кабинете:\n\n1. Создайте проект GigChat API\n    \n2. В созданном проекте GigaChat API:\n    \n    1. сгенерируйте _**Client Secret**_ и скопируйте значение поля _**Авторизационные данные**_\n        \n    2. скопируйте значение поля _**Scope**_ (GIGACHAT_API_PERS или GIGACHAT_API_CORP)\n        \n\nВ интерфейсе Postman:\n\n1. Скопируйте коллекцию, для этого нажмите на названии коллекции правой кнопкой мыши и выберите _**Create a fork**_\n    \n2. Перейдите на вкладку _**Variables**_,\n    \n    1. в поле _**Current value**_ переменной _**credentials**_ введите авторизационные данные\n    2. в поле _**Current value**_ переменной _**scope**_ проверьте указанное значение и при необходимости скорректируйте\n        \n3. Нажмите _**Save**_\n    \n4. Выберите запрос _**get access_token**_ и нажмите _**Send**_, в ответ вы получите токен, он автоматически запишется в переменную и будет действовать 30 минут\n    \n5. Совершайте запросы с помощью **POST chat/completions**",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25603845",
+		"_collection_link": "https://www.postman.com/salute-developers/workspace/public/collection/25485331-52bf7d83-c313-4517-9389-4d2eb361facd?action=share&source=collection_link&creator=25603845"
+	},
+	"item": [
+		{
+			"name": "list models",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/models",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"models"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat/completions (text)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-Request-ID",
+						"value": "79e41a5f-f180-4c7a-b2d9-393086ae20a1",
+						"description": "По нему можно найти логи запроса",
+						"type": "text"
+					},
+					{
+						"key": "X-Session-ID",
+						"value": "b6874da0-bf06-410b-a150-fd5f9164a0b2",
+						"description": "По нему можно найти логи сессии",
+						"type": "text"
+					},
+					{
+						"key": "X-Client-ID",
+						"value": "b6874da0-bf06-410b-a150-fd5f9164a0b2",
+						"description": "По нему можно найти логи пользователя",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"model\": \"GigaChat:latest\", // идентификатор модели, можно указать конкретную или :latest  для выбора наиболее актуальной\n  \"temperature\": 0.87, // от 0 до 2, чем выше, тем вывод более случайный, не рекомендуетсы использовать совместно c top_p\n  \"top_p\": 0.47, // от 0 до 1, альтернатива параметру temperature, не рекомендуется использовать совместно c temperature\n  \"n\": 1, // от 1 до 4, число вариантов ответов модели\n  \"max_tokens\": 512, // максимальное число токенов для генерации ответов\n  \"repetition_penalty\": 1.07, // количество повторений слов, 1.0 - ни чего не менять, от 0 до 1 повторять уже сказанные слова, от 1 и далее не использовать сказанные слова\n  \"stream\": false, // если true, будут отправляться частичные ответы сообщений\n  \"update_interval\": 0, // интервал в секундах, не чаще которого будут присылаться токены в stream режиме\n  \"messages\": [\n        {\n            \"role\": \"system\", // контекст\n            \"content\": \"Отвечай как научный сотрудник\"\n        },\n        {\n            \"role\": \"user\", // запрос пользователя\n            \"content\": \"Напиши 5 вариантов названий для космической станции\"\n        }\n/* пример с диалогом\n        {\n            \"role\": \"assistant\", // ответ модели\n            \"content\": \"1. МИР 2. ЗЕМЛЯ 3. ЛУНА 4. НОВАЯ ЗЕМЛЯ 5. ПОЛЮС\"\n        },\n        {\n            \"role\": \"user\", // запрос пользователя\n            \"content\": \"А если представить, что они будут на Марсе?\"\n        }\n*/\n    ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/chat/completions",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"chat",
+						"completions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chat/completions (image)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"body = JSON.parse(responseBody)",
+							"pm.collectionVariables.set(\"file_id\", body.choices[0].message.content.match(`img src=\"(.+)\" fuse=\"true\"`)[1])"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-Request-ID",
+						"value": "79e41a5f-f180-4c7a-b2d9-393086ae20a1",
+						"description": "По нему можно найти логи запроса",
+						"type": "text"
+					},
+					{
+						"key": "X-Session-ID",
+						"value": "b6874da0-bf06-410b-a150-fd5f9164a0b2",
+						"description": "По нему можно найти логи сессии",
+						"type": "text"
+					},
+					{
+						"key": "X-Client-ID",
+						"value": "b6874da0-bf06-410b-a150-fd5f9164a0b2",
+						"description": "По нему можно найти логи пользователя",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"model\": \"GigaChat:latest\", // идентификатор модели, можно указать конкретную или :latest  для выбора наиболее актуальной\n  \"temperature\": 0.87, // от 0 до 2, чем выше, тем вывод более случайный, не рекомендуетсы использовать совместно c top_p\n  \"top_p\": 0.47, // от 0 до 1, альтернатива параметру temperature, не рекомендуется использовать совместно c temperature\n  \"n\": 1, // от 1 до 4, число вариантов ответов модели\n  \"max_tokens\": 512, // максимальное число токенов для генерации ответов\n  \"repetition_penalty\": 1.07, // количество повторений слов, 1.0 - ни чего не менять, от 0 до 1 повторять уже сказанные слова, от 1 и далее не использовать сказанные слова\n  \"stream\": false, // если true, будут отправляться частичные ответы сообщений\n  \"update_interval\": 0, // интервал в секундах, не чаще которого будут присылаться токены в stream режиме\n  \"messages\": [\n        {\n            \"role\": \"system\", // контекст\n            \"content\": \"Если тебя просят создать изображение, ты должен сгенерировать специальный блок: <fuse>text2image(query: str, style: str)</fuse>,\\nгде query — текстовое описание желаемого изображения, style — опциональный параметр, управляющий стилем генерации.\"\n        },\n        {\n            \"role\": \"user\", // запрос пользователя\n            \"content\": \"Нарисуй слона\"\n        }\n/* пример с диалогом\n        {\n            \"role\": \"assistant\", // ответ модели\n            \"content\": \"1. МИР 2. ЗЕМЛЯ 3. ЛУНА 4. НОВАЯ ЗЕМЛЯ 5. ПОЛЮС\"\n        },\n        {\n            \"role\": \"user\", // запрос пользователя\n            \"content\": \"А если представить, что они будут на Марсе?\"\n        }\n*/\n    ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/chat/completions",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"chat",
+						"completions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "files/{file_id}/content",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/files/{{file_id}}/content",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"files",
+						"{{file_id}}",
+						"content"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "tokens/count",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-Request-ID",
+						"value": "79e41a5f-f180-4c7a-b2d9-393086ae20a1",
+						"description": "По нему можно найти логи запроса",
+						"type": "text"
+					},
+					{
+						"key": "X-Session-ID",
+						"value": "b6874da0-bf06-410b-a150-fd5f9164a0b2",
+						"description": "По нему можно найти логи сессии",
+						"type": "text"
+					},
+					{
+						"key": "X-Client-ID",
+						"value": "b6874da0-bf06-410b-a150-fd5f9164a0b2",
+						"description": "По нему можно найти логи пользователя",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"model\": \"GigaChat\",\n    \"input\": [\n        \"Я к вам пишу — чего же боле?\",\n        \"Что я могу еще сказать?\",\n        \"Теперь, я знаю, в вашей воле\",\n        \"Меня презреньем наказать.\",\n        \"Но вы, к моей несчастной доле\",\n        \"Хоть каплю жалости храня,\",\n        \"Вы не оставите меня.\"\n    ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/tokens/count",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tokens",
+						"count"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "embeddings",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"model\": \"Embeddings\",\n    \"input\": [\n        \"Расскажи о современных технологиях\",\n        \"Какие новинки в мире IT?\"\n    ]\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/embeddings",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"embeddings"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get access_token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"body = JSON.parse(responseBody)",
+							"pm.collectionVariables.set(\"access_token\", body.access_token)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "RqUID",
+						"value": "6f0b1291-c7f3-43c6-bb2e-9f3efb2dc98e",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "scope",
+							"value": "{{scope}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{authUrl}}",
+					"host": [
+						"{{authUrl}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{credentials}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "credentials",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "scope",
+			"value": "GIGACHAT_API_PERS",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "file_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "baseUrl",
+			"value": "https://gigachat.devices.sberbank.ru/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "authUrl",
+			"value": "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
+			"type": "string"
+		}
+	]
+}

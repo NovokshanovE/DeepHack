@@ -1,0 +1,910 @@
+1
+Conditional LSTM-GAN for Melody Generation from Lyrics
+Yi Yu1, Abhishek Srivastava2, Simon Canales3,
+1Digital Content and Media Sciences Research Division, National Institute of Informatics, Tokyo, Japan
+2Multimodal Digital Media Analysis Lab, Indraprastha Institute of Information Technology Delhi, India
+3Institut de g ´enie ´electrique et ´electronique, ´Ecole Polytechnique F ´ed´erale de Lausanne, Switzerland
+Abstract —Melody generation from lyrics has been a challenging
+research issue in the ﬁeld of artiﬁcial intelligence and music, which
+enables to learn and discover latent relationship between interesting
+lyrics and accompanying melody. Unfortunately, the limited availability
+of paired lyrics-melody dataset with alignment information has hindered
+the research progress. To address this problem, we create a large dataset
+consisting of 12,197 MIDI songs each with paired lyrics and melody
+alignment through leveraging different music sources where alignment
+relationship between syllables and music attributes is extracted. Most
+importantly, we propose a novel deep generative model, conditional Long
+Short-Term Memory - Generative Adversarial Network (LSTM-GAN) for
+melody generation from lyrics, which contains a deep LSTM generator
+and a deep LSTM discriminator both conditioned on lyrics. In particular,
+lyrics-conditioned melody and alignment relationship between syllables of
+given lyrics and notes of predicted melody are generated simultaneously.
+Extensive experimental results have proved the effectiveness of our
+proposed lyrics-to-melody generative model, where plausible and tuneful
+sequences can be inferred from lyrics.
+Index Terms —Lyrics-conditioned melody generation, conditional
+LSTM-GAN
+I. I NTRODUCTION
+Music generation is also referred to as music composition with the
+process of creating or writing an original piece of music, which is one
+of human creative activities [1]. Without understanding music rules
+and concepts well, creating pleasing sounds is impossible. To learn
+these kinds of rules and concepts such as mathematical relationships
+between notes, timing, and melody, the earliest study of various
+music computational techniques related to Artiﬁcial Intelligence (AI)
+has emerged for music composition in the middle of 1950s [2].
+Markov models as a representative method of machine learning have
+been applied to algorithmic composition [3]. However, due to the
+limited availability of paired lyrics-melody dataset with alignment
+information, research progress of lyrics-conditioned music generation
+has been obstructed.
+With the development of available lyrics and melody dataset and
+deep neural networks, musical knowledge mining between lyrics
+and melody has gradually become possible [4],[5]. Melody [6] is
+a sequence of musical notes over time, in which each note is
+sounded with a particular pitch and duration. Generating a melody
+from lyrics is to predict a melodic sequence when given lyrics
+as a condition. Existing works, e.g., Markov models [7], random
+forests[8], and recurrent neural network (RNN)[9], can generate
+lyrics-conditioned music melody. However, these methods cannot
+ensure that the distribution of generated data is consistent with that
+of real samples. Generative adversarial networks (GANs) proposed
+in [10] are a generative model which can generate data samples
+following a given distribution, and have achieved a great success
+in the generation of image, video, and text.
+Inspired by the great success of GANs in various generative models
+in the area of computer vision and national language processing,
+Abhishek was involved in this work during his internship from August
+to September, 2020 in National Institute of Informatics (NII), Tokyo.
+Simon was involved in this work during his internship from June to
+August, 2019 in National Institute of Informatics (NII), Tokyo .we propose a conditional LSTM-GAN model to compose lyrics-
+conditioned melody where a discriminator can help to ensure that
+generated melodies have the same distribution as real ones. To the
+best of our knowledge, this is the ﬁrst study that conditional LSTM-
+GAN is proposed for melody generation from lyrics, which takes
+lyrics as additional context to instruct deep LSTM-based generator
+network and deep LSTM-based discriminator network. Our proposed
+generation framework has several signiﬁcant contributions, as fol-
+lows:
+i) A LSTM network is trained to learn a joint embedding in the
+syllable-level and word-level to capture syntactic structures of lyrics,
+which can represent semantic information of lyrics.
+ii) A conditional LSTM-GAN is optimized to generate discrete-
+valued sequences of music data by introducing a quantizer.
+iii) A large-scale paired lyrics-melody dataset with 12,197 MIDI
+songs is built to demonstrate that our proposed conditional LSTM-
+GAN can generate more pleasant and harmonious melody compared
+with baseline methods.
+II. R ELATED WORKS
+Automatic music generation has experienced a signiﬁcant change
+in computational techniques related to artiﬁcial intelligence and
+music [11], spanning from knowledge-based or rule-based methods to
+deep learning methods. The majority of traditional music generation
+methods are based on music knowledge representation, which is a
+natural way to solve the issue with some kind of composition rules
+[12]. Knowledge-based music rules are utilized to generate melodies
+when given the speciﬁed emotions by users [13]. Moreover, several
+statistical models [14] such as hidden Markov models, random walk,
+and stochastic sampling are discussed for music generation. For
+example, Jazz chord progressions are generated by Markov model
+for music generation in [15] and statistical models are applied to
+music composition in [16].
+With rapid advancement of neural networks, deep learning has
+been extended to the ﬁeld of music generation. A hierarchical RNN
+for melody generation is proposed in [17], which includes three
+LSTM subnetworks. Beat proﬁle and bar proﬁle are exploited to
+represent rhythm features at two different time scales respectively. A
+neural network architecture [18] is suggested to compose polyphonic
+music with a manner of preserving translation invariance of dataset.
+Motivated by convolution that can obtain transposition-invariance and
+generate joint probability distributions over a musical sequence, two
+extended versions, Tied-parallel LSTM-NADE and bi-axial LSTM,
+are proposed to achieve better performance. A continuous RNN with
+adversarial training (C-RNN-GAN) [19] is proposed to compose
+MIDI classical music. RNN is considered to model sequences of
+MIDI data during adversarial learning. The generator is to transform
+random noise to MIDI sequences, while the discriminator is to
+distinguish the generated MIDI sequence from real ones.
+Earliest work [20] for lyrics-conditioned melody generation is
+deﬁned as generating a melody when given Japanese lyrics, patterns
+of music rhythms, and harmony sequences. Some constraints arearXiv:1908.05551v2  [cs.AI]  21 Apr 20212
+determined to associate syllables with notes. Melody generation is
+realized by dynamic programming. In [21] the rhythmic patterns
+occurred in notes can be classiﬁed. Pitches that are most suitable for
+accompanying the lyrics are generated using n-gram models. Three
+stylistic categories such as nursery rhymes, folk songs, and rock
+songs are generated for given lyrics. A recently proposed ALYSIA
+songwriting system [8] is a lyrics-conditioned melody generation
+system based on exploiting a random forest model, which can predict
+the pitch and rhythm of notes to determine the accompaniments
+for lyrics. When given Chinese lyrics, melody and exact alignment
+are predicted in a lyrics-conditional melody composition framework
+[9], which is an end-to-end neural network model including RNN-
+based lyrics encoder, RNN-based context melody encoder, and a
+hierarchical RNN decoder. The authors create large-scale Chinese
+language lyrics-melody dataset to evaluate the proposed learning
+model.
+Our work focuses on lyrics-conditioned melody generation using
+LSTM-based conditional GAN, which is ﬁrst proposed for tackling
+melody generation from lyrics. Distincting from the existing works,
+our generative model can ensure that the distribution of generated
+melody mimics that of real sample melodies. A skip-gram model
+is trained to transform raw textual lyrics into syllable embedding
+vector which is taken as input together with noise vector for training
+a deep generator model. A deep discriminator model is trained
+to distinguish generated MIDI note sequences from real ones. A
+large English language lyrics-melody dataset is built to validate the
+effectiveness of our proposed recurrent conditional GAN for lyrics-
+to-melody generation. Novel ideas are designed to evaluate melody
+generation, which is also very useful reference for measuring various
+generative models.
+III. P RELIMINARIES
+Before we describe our melody generation algorithm, a brief
+introduction is given in the following to help understanding musical
+knowledge, the sequential alignment relationship between lyrics and
+melody, and how to build the lyrics-melody music dataset.
+A. Melody
+Melody and lyrics provide complementary information in un-
+derstanding a song with the richness of human beings’ emotions,
+cultures, and activities. Melody, as a temporal sequence containing
+musical notes, plays an important role. A note contains two music
+attributes: pitch and duration. Pitches are perceptual properties of
+sounds that organize music by highness or lowness on a frequency-
+related scale, which can be played in patterns to create melodies
+[22]. Piano keys have MIDI numbers ranging from 21 to 108, which
+also represent the corresponding pitch numbers. For example, ‘D5’
+and ‘A4’ can be respectively represented as 74 and 69 according to
+the mapping between notes and MIDI numbers. In music, duration
+[23] represents the length of time that a pitch or tone is sounded.
+Rests [24] are intervals of silence in pieces of music, marked by
+symbols indicating the length of the pause. If we treat a rest as a
+note with a special pitch value, it is hard to ﬁnd a syllable paired
+with it. Therefore, to ensure one-syllable-to-one-note alignment, in
+this work, we take the “rest” as one of music attributes contained in
+a sequence of triplets.
+B. Lyrics
+Lyrics as natural language represent music theme and story, which
+are a very important element for creating a meaningful impression
+of the music. An English syllable [25] is a unit of sound, which may
+be a word or a part of a word. According to timestamp informationin MIDI ﬁles of music tracks, melodies and lyrics are synchronized
+together to parse the data and extract alignment information.
+C. Alignment
+6
+0.5 1 0.5
+0 0Lyrics
+List toenNote
+Duration
+Rest
+D5C5C5
+Rest
+List en to the rhy thm of the fall ing rain Tel ing me
+D5 C5 C5 A4 A4 G4 G4 F4 G4 F4 F4 D5 C5 C5
+0.5 1 0.5 1 0.5 1 1 0.5 2.5 1 4 1 0.5 1
+0 0 0 0 0 0 0 0 0 0 0 1 0 0
+Fig. 1: An example of alignment between lyrics and melody.
+An English syllable [25] is a unit of sound, which may be a word
+or a part of a word. One syllable may correspond to one or more
+notes in English songs. Accordingly, the alignment between lyrics
+and melody could be a paired sequence of one-syllable-to-one-note or
+one-syllable-to-multiple-notes. Following the existing research such
+as [8] on melody generation from lyrics, currently we only exploit the
+pairs of one-syllable-to-one-note to train our conditional LSTM-GAN
+model for melody generation from lyrics, and investigate the pairs of
+one-syllable-to-multiple-notes in the future work. An example data
+structure of the alignment between lyrics and melodies is shown
+in Fig. 1. Lyrics are divided to syllables. Each column represents
+one syllable with its corresponding triplet of music attributes fnote,
+duration, restg. Accordingly, a lyrics sample can be associated with a
+sequence offnote, duration, restgtriplets. With these music attributes,
+sheet music can be produced.
+IV. M ELODY GENERATION FROM LYRICS
+Our aim is to learn a deep model that is able to represent the distri-
+bution of real samples, which further has the capability of generating
+new samples from this estimated distribution. In particular, using
+the capability of deep learning and generative modeling, sequential
+alignment relationship can be learned between lyrics and melody
+from real musical samples. As the number of epochs increases, the
+learning goes deeper, and the distribution of generated samples is
+more consistent with the distribution of real samples. Our training
+data contains the sequential alignment relationship between syllables
+and notes, which can be learned by conditional LSTM-GAN. During
+the training, GAN actually can resemble the distribution of the
+training samples and LSTM can learn the sequential alignment
+relationship.
+Our proposed conditional LSTM-GAN for lyrics-to-melody gen-
+eration model is shown in Fig. 2, which is an end-to-end generative
+learning conditioned with lyrics. A sequence of syllable embedding
+vectors concatenated with noisy vectors is taken as input of the
+generator network. The generated MIDI sequences together with the
+sequence of syllable embedding vectors are taken as input of the
+discriminator network, which aims to train a model for distinguishing
+generated MIDI note sequences from real ones. In addition, a tuning
+scheme is introduced to quantize MIDI numbers so as to generate
+melody sequence with discrete attributes. Both the generator and
+discriminator are unidirectional RNN networks with the conﬁguration
+shown in Table I.
+A. Problem formulation
+Taking lyrics as input, our goal is to predict a melody sequentially
+aligned with the lyrics, where MIDI numbers, note duration, and rest3
+RNN1 (generator) RNN2 (discriminator)
+Input 30 (random noise), 20 (syll. embedding) 3 (MIDI attributes), 20 (syll. embedding)
+Layer 1 400, Fully-connected, ReLU 400, LSTM, tanh
+Layer 2 400, LSTM, tanh 400, LSTM, tanh
+Layer 3 400, LSTM, tanh 2 (real or fake), sigmoid
+Output 3 (MIDI attributes), fully-connected, linear N/A
+TABLE I: Conﬁguration of the generator and discriminator.
+1GeneratorLSTM LSTM LSTM ……DiscriminatorLSTM LSTM LSTM ……
+Lyrics 
+embedding“Listen to the rhythm of  the 
+falling rain.”Real or fake?
+Generated MIDI 
+sequencesReal MIDI 
+sequences
+Training
+data
+Sequences of syllable 
+embedding vectorsSequences of noisy 
+vectors
+Fig. 2: Conditional LSTM-GAN for melody generation from lyrics.
+duration are synthesized with lyrics to generate a song. Our research
+problem can be formulated as follows: The syllables of lyrics as input
+are represented by a sequence Y= (y1;;yjKj). The melody as
+output is a sequence X= (x1;;xjKj), where MIDI numbers,
+note duration, and rest duration are simultaneously predicted as the
+xi=fxi
+MIDI;xi
+dur;xi
+restg. Moreover, the time length of the output
+sequence
+jKjX
+i=1xi
+dur+xi
+rest (1)
+determines the length of synthesized song with lyrics.
+B. Lyrics embedding
+As the vocabulary of our lyrics data is large without any labels,
+we need to train an unsupervised model that can learn the context of
+any word or syllable. Speciﬁcally, we utilize our lyrics data to train a
+skip-gram model, which enables us to obtain the vector representation
+that can encode linguistic regularities and patterns in the context of
+given lyrics.
+Our method encodes lyrics information at two different semantic
+levels: syllable-level and word-level, and two skip-gram models are
+trained respectively, which aim at associating a vector representation
+with an English syllable. Speciﬁcally, lyrics of each song are divided
+into sentences, each sentence is divided into words, and each word
+is further divided into syllables. Words W=fw1;w2;w3;:::;w ng
+are taken as tokens for training a word-level embedding model and
+syllablesS=fs1;s2;:::;s mgare taken as tokens for training
+a syllable-level embedding model. Then, we train each skip-gram
+model as a logistic regression with stochastic gradient decent as the
+optimizer, and the learning rate with an initial value 0.03 is gradually
+decayed every epoch until 0.0007. Context window spans 7 adjacent
+tokens and negative sampling distribution parameter is = 0:75. Wetrain the models to respectively obtain the word-level and syllable-
+level embedding vectors of dimensions V= 10 .
+Let E w()and E s()denote the word-level and syllable-level
+encoders respectively, and sdenote a syllable from word w. Then,
+syllable embedding and word embedding are concatenated as follows:
+y=Ew(w)jjEs(s) =wjjs (2)
+where s=Es(s)2R10andw=Ew(w)2R10are the embedding
+of syllablesand wordw, respectively. The dimension of the overall
+embedding is V= 20 . Accordingly, lyrics sequences each with 20
+syllables, each syllable being encoded in 20-dimension, are used in
+our experiment.
+C. Condtional LSTM-GAN model
+In our work, an end-to-end deep generative model is proposed
+for lyrics-conditioned melody generation. LSTM is trained to learn
+semantic meaning and relationships between lyrics and melody
+sequences. Conditional GAN is trained to predict melody when given
+lyrics as input based on considering music alignment relationship
+between lyrics and melody.
+1) LSTM: LSTM [26] networks are an extension to RNNs, which
+not only contain internal memory but also have capability of learning
+longer dependencies. An LSTM cell has three gates: input, forget, and
+output. These gates decide whether or not allow new input in, forget
+old information, and affect output at current time-step. In particular,
+at time-step t, the three states of the gates in an LSTM cell are given
+by:
+it=(wi[ht 1;xt] +bi) (3)
+ft=(wf[ht 1;xt] +bf) (4)
+ot=(wo[ht 1;xt] +bo) (5)
+whereit,ftandotdenote the input, forget, and output gates states
+respectively, ht 1is the output of the LSTM cell at previous time-
+step,w’s andb’s are weights and biases, xtis the input of the LSTM
+cell, and()is the sigmoid function.
+Then, the current output of the cell is computed by:
+ht=ottanh (ct) (6)
+ct=ftct 1+it~ct (7)
+~ct=tanh (wc[ht 1;xt] +bc): (8)
+wheredenotes the element-wise multiplication between vectors.
+2) GAN: A GAN is proposed by Ian Goodfellow, et al. [10], which
+aims to train generative models by mitigating complex computation
+of approximating many probabilities. The general idea of GAN is
+to simultaneously train a generator G ()and a discriminator D ()
+with conﬂicting objectives. This method learns to predict new data
+with the same statistics as the training set. The generator G ()tries
+to capture data distribution of training set. It takes an uniform noise
+vector zas an input and outputs a vector ~ x=G(z). In an adversarial
+way, the discriminator D ()tries to identify samples produced by the4
+2
+Fully-connected layerLSTM
+LSTMFully-connected layer
+Syllable 
+embeddingNoise 
+vector
+Generated 
+MIDI
+Fig. 3: Generator network for one MIDI note generation, conditioned
+with an encoded syllable y2R20, with an input random noise vector
+n2R30, and output MIDI attributes ^x2R3.
+generator from real ones. That is to say, G ()and D ()play the
+following two-player minimax game:
+min
+Gmax
+DV(D;G ) =Expdata(x)[logD(x)]
++Ezpz(z)[log(1 D(G(z)))](9)
+3) Lyrics-conditional GAN: Conditional GAN is proposed in [27],
+with the goal of instructing the generation process by conditioning
+the model with additional information, which motivates us to train a
+generative model for lyrics-conditioned melody generation. In this
+work, the generator and discriminator are conditioned on lyrics.
+The lyrics are encoded to a sequence of 20-dimensional embedding
+vectors.
+The melody contains a sequence of music attributes x(i), repre-
+senting MIDI note, duration, and rest. Therefore, in the context of
+lyrics-conditioned melody generation, the input of the generator is
+the paired sequences of syllable embedding vectors y(i)and uniform
+random vector n(i)in[0;1]k, wherek= 30 . The generated music
+attributes, syllable embedding vectors y(i), and real music attributes
+x(i), are fed to the discriminator. G(z(i)jy(i))is a sequence of triplets
+containing attributes ^xi=f^xi
+MIDI;^xi
+dur;^xi
+restg. Both the generator
+and the discriminator contain LSTM cells. The loss functions in
+the following are implemented to jointly train the generator and
+discriminator, where mis mini batch size.
+LG=1
+mmX
+i=1log(1 D(G(z(i)jy(i))jy(i))): (10)
+LD=1
+mmX
+i=1[ logD(x(i)jy(i)) log(1 D(G(z(i)jy(i))jy(i)))]:
+(11)
+4) Generator network in Fig.3: The generator is to learn the
+distribution of real samples, which is trained to increase the error
+rate of the discriminator. To learn a distribution over the data, the
+generator builds a mapping function from a prior noise distribution
+to the data space. By concatenating the syllable embedding and
+noise as input, GAN is expected to instruct the melody generation
+process (by lyrics) while generating diverse melodies (by random
+noise). In this work, each melody sequence has 20 notes, which
+needs 20 LSTM cells to learn the sequential alignment between
+lyrics and melody. The ﬁrst layer in the generator network uses
+ReLU (rectiﬁed linear unit). When given a 50-dimensional vector
+concatenated by an encoded syllable y2R20and an input random
+noise vector n2R30, the output of the ﬁrst layer is scaled to a
+400-dimensional vector to ﬁt the number of internal hidden units of
+the LSTM cells. We tried different amounts of LSTM layers and
+found that 2 layers are sufﬁcient in generator network for MIDI note
+3
+LSTM
+LSTMFully-connected layer
+Syllable 
+embeddingReal or fake?Generated 
+MIDIFig. 4: Discriminator network for one MIDI note, conditioned with
+an encoded syllable y2R20, with the generated MIDI attributes
+^x2R3, and output the decision of real or fake.
+generation. Then, the fourth linear layer produces a triplet of music
+attributes ^xi=f^xi
+MIDI;^xi
+dur;^xi
+restg.
+The same LSTM cell is used for each syllable in the lyrics. The
+output with the triplet music attributes of previous LSTM cell is
+concatenated with current 20-dimensional syllable embedding, which
+are further fed to current LSTM cell. This procedure is repeated until
+the generator can succeed to fool the discriminator.
+5) Discriminator network in Fig.4: The discriminator is to distin-
+guish real melody samples from generated ones, which is trained by
+estimating the probability that a sample is from real training dataset
+rather than the generator. The discriminator loss function penalizes
+the discriminator for misestimating a real sample as fake or a fake
+sample as real. Because the input of the discriminator is a sequence,
+LSTM is also used here. Since lyrics as context information are
+used as condition in the discriminator, the generated triplet of music
+attributes concatenated with syllable embedding together as a 23-
+dimensional vector is input to the ﬁrst LSTM cell in the discriminator.
+The hidden size of the LSTM cell in the discriminator is also 400. The
+output 400-dimensional vector from the second LSTM layer is input
+to the third linear layer, followed by a sigmoid activation function
+which estimates the decision output of real or fake by a value in the
+range [0;1]. With conditioning lyrics, the discriminator and generator
+are simultaneously learned until the training process converges.
+D. Tuning scheme
+The output from the generator is a continuous-valued sequence,
+which needs to be constrained to the underlying musical repre-
+sentation of discrete-valued MIDI attributes. Quantization of music
+attributes (MIDI number, note duration, and rest duration) are done
+during the generation in the experiments of validation and testing.
+Music attributes are constrained to their closest discrete values.
+The concept of standard scales is important for the melody genera-
+tion task. If a melody contains notes belonging to one of the standard
+scales, it indicates this melody has a perfect scale consistency. Below
+are three examples of standard scales1:
+Cmajor =fC;D;E;F;G;A;B g;
+Dmajor =fD;E;F];G;A;B;C] g;
+Dnatural minor =fD;E;F;G;A;B[;C g, whereB[is equiv-
+alent toA].
+The quantized music attributes are estimated to see if each gener-
+ated sequence has a perfect scale consistency of melody. In particular,
+the most likely standard scale of music attributes this sequence
+belongs to is generated from syllable embedding in validation and
+testing datasets. The remaining out-of-tune notes are mapped to their
+closest in-tune music attributes.
+1https://en.wikipedia.org/wiki/Scale (music)5
+V. L YRICS -MELODY DATA ACQUIREMENT
+There is no aligned lyrics-melody music dataset publicly available
+for music generation. In this work, a large-scale music dataset
+with sequential alignment between lyrics and melody is created
+to investigate the feasibility of this research with deep conditional
+LSTM-GAN. We acquire lyrics-melody paired data from two sources
+based on considering melodies with enough English lyrics, where
+7,998 MIDI ﬁles come from the LMD-full MIDI Dataset [28] and
+4,199 MIDI ﬁles come from the reddit MIDI dataset [29]. Altogether
+there are 12,197 MIDI ﬁles in the dataset, which contain 789.34 hours
+of melodies. The average length of melodies is 3.88 minutes. This
+dataset is available on Github2.
+1) Data selection: In our experiment, 20,934 unique syllables and
+20,268 unique words from the LMD-full MIDI and reddit MIDI
+dataset are used for training a skip-gram model to extract embedding
+vectors of lyrics. As for training the LSTM-GAN model, only
+paired lyrics-melody sequences in the LMD-full dataset are used.
+In particular, if a MIDI ﬁle has more than 20 notes but less than 40
+notes, one 20-note sequence is taken as our data sample; if a MIDI
+ﬁle has more than 40 notes, two 20-note sequences are taken as our
+data samples. Accordingly, 13,251 sequences each with 20 notes and
+265,020 syllable-note pairs are acquired, which are used for training,
+validation, and testing.
+2) Parsing MIDI ﬁle: Triplets of music attributes with fMIDI
+Number, note duration, rest duration gare obtained by parsing each
+MIDI ﬁle from the LMD-full dataset which contains English lyrics.
+The parsing is made as follows:
+The beats-per-minute (BPM) value for each MIDI ﬁle is ex-
+tracted.
+If a note has a corresponding English syllable, its MIDI Number
+is extracted. This value is taken as the ﬁrst of music attributes
+in our melody representation.
+If a note has a corresponding English syllable, its note-on and
+note-off values are stored.
+From the note-on and note-off values, the note duration and rest
+duration attributes are calculated, using the formula
+x=(tBPM
+60) (12)
+wherexis an attribute of note k(either note duration or rest
+duration),tis a time in seconds ( t=note-off k note-on kto
+calculate note duration and t=note-on k note-off k-1to calculate
+rest duration) and ()is an operator which constrains the value
+to the closest value in the set of values used to represent the
+corresponding attribute.
+3) Note duration: A note duration means the length of time that
+a note is played. Note durations frequently appearing in our dataset
+have been shown in Fig.5, and are summarized in Table II. When we
+discretize note lengths of the generated melody, only note durations
+in Table II are considered. In the future, we will try to collect more
+lyrics which include other note durations.
+0.25 0.5 0.75 1 1.5 2 3 4 6 8 16 32
+) ( (    		2	4	8	
+TABLE II: Relationship between note duration and note.
+4) Rest: A rest means how long the silence in a piece of melody
+will last. The rest values and corresponding rest symbols are shown
+in Table III.
+2https://github.com/yy1lab/Lyrics-Conditioned-Neural-Melody-Generation0 1 2 4 8 16 32
+No rest > <(half rest) <(whole rest) 2<4< 8<
+TABLE III: Relationship between rest values and corresponding
+symbols.
+5) Distribution of music attributes: The distribution of each at-
+tribute in our music dataset is respectively shown in Fig. 5, which
+indicates that most MIDI note numbers range from 60 to 80, quarter
+note is most frequently played, and rest= 0 appeared in most cases
+of melodies.
+VI. E VALUATION
+In this section, experimental setup, validation method, and exper-
+imental results are introduced to investigate the feasibility of our
+proposed conditional LSTM-GAN model.
+A. Experimental setup
+The entire dataset is split with a 0.8/0.1/0.1 proportion between
+training, validation and testing sets. The model is trained using mini-
+batch gradient descent for a total of 400 epochs. The learning rate
+starts at a value of 0:1, and gradually decreases.
+During both validation and testing stages, the sequences of triplet
+continuous-valued attributes are ﬁrst constrained to their closest
+discrete value. The candidate values for the MIDI Numbers are in the
+rangef21;:::; 108g. In addition, the quantized sequence is checked
+to see if it belongs to most likely scale, where the MIDI number of
+the out-of-tune notes is changed to the closest MIDI number in the
+most likely scale.
+B. Validation using MMD
+The validation is made using a Maximum Mean Discrepancy
+(MMD) [30] unbiased estimator. Giving two sets of samples, MMD2
+takes a value between 0 and 1, indicating how likely the two sets of
+samples are coming from the same distribution (a value of 0 indicates
+that the two sets are sampled from the same distribution). Here, a
+melody sequence of notes is regarded as a set. At the end of each
+training epoch, the MMD between the generated sequences and the
+validation sequences is calculated. The weights and biases from the
+model corresponding to the lowest MMD value are selected.
+LetXm:=fx1;:::;x mgandYn:=fy1;:::;y ngbe two sets of
+independently and identically distributed (i.i.d) samples from Pxand
+Pyrespectively. Then, an unbiased empirical estimate of MMD2is
+given by [31]:
+MMD2
+u(F;Xm;Yn) =1
+m(m 1)mX
+i=1mX
+j6=ik(xi;xj)
++1
+n(n 1)nX
+i=1nX
+j6=ik(yi;yj) 2
+mnmX
+i=1nX
+j=1k(xi;yj):(13)
+whereFis a reproducing kernel Hilbert space (RKHS), with the
+kernel function k(x;x0) :=h(x);(x0)i, and continuous feature
+mapping(x)2F for eachx. We usedk(x;x0) = exp( kx 
+x0k2=(22))as the kernel function, with kernel bandwidth set
+such thatkx yk=(22)equals 1 when the distance between xand
+yis the mean distance between points from both datasets Xmand
+Yn[32].6
+Fig. 5: Distribution of music attributes in our dataset.
+C. Comparison methods
+The Random baseline model for the following experiments is
+inspired by [33]. Melodies of 20 notes are created by randomly
+sampling the testing set based on the dataset distribution for music
+attributes (i.e. the distribution shown in Fig. 5). Sequences generated
+by the baseline model are also judged to see if out-of-tune MIDI
+number needs to be changed. The MIDI numbers are restricted in
+the setf60;:::; 80g, meaning that if a MIDI number lower than 60
+is sampled from the MIDI numbers distribution, then it takes a value
+of 60, and similarly a MIDI number higher than 80 is set to 80.
+Besides the Random baseline model, we also use a stronger
+baseline model trained with the Maximum Likelihood Estimation
+(MLE) objective which exploits a single-layered LSTM network [34]
+as the generator. We refer to it as the MLE baseline model in our
+experiments. This MLE baseline is trained by mini-batch gradient
+descent over the gradient of a log-maximum likelihood estimator as
+follows:
+^l= 1
+MNMX
+i=1NX
+j=1logpi;j (14)
+whereMis the batch size, Nis the sequence length, and pi;jis
+the estimated probability (i.e. output of the softmax function) with
+which thei;j-th generated note is the same as the i;j-th note from
+the batch taken from the training set. MLE with a single LSTM layer
+is selected as the baseline according to our experimental results. The
+conﬁguration for the MLE baseline model is shown in Table IV.
+D. Training stage analysis
+The MIDI note number, spectrum, and relative amplitude of
+generated songs are investigated at 1, 51, and 351 epochs as shown
+in Fig. 6. The corresponding sheet score with alignment between
+lyrics and melodies at 1, 51, and 351 epochs are shown in Fig. 7. It
+is obvious that the generated melody gets better when the learning
+goes deeper by increasing the number of epochs. Additionally, we
+ask volunteers to listen to the generated songs at different epochs.
+Their feedback also conﬁrms the effectiveness of our deep conditional
+LSTM-GAN.
+E. Music quantitative evaluation
+In order to investigate if lyrics-conditioned LSTM-GAN can gener-
+ate melodies that resemble the distribution of training samples, some
+quantitative measurements are designed to compare the melodies
+generated by our proposed model, the Random baseline, and MLE
+baseline, which are shown in the following:
+MIDI numbers span: the difference between the highest MIDI
+number and the lowest one of a sequence.
+3-MIDI-number repetitions: the sum of the “count of each
+distinct 3-MIDI occurrence minus 1” (a melody slice consistingof 3 adjacent notes) throughout the sequence, which is a metric
+similar to the one used in previous work [19].
+2-MIDI-number repetitions: the sum of the “count of each
+distinct 2-MIDI occurrence minus 1” throughout a sequence.
+Number of unique MIDI numbers: a count of how many different
+MIDI numbers are present in a sequence.
+Number of notes without rest: a count of how many rest duration
+have a value of 0 throughout a sequence.
+Average rest value within a song: an average value of the rest
+duration attribute.
+Song length: the sum of all the note duration attributes and all
+the rest duration attributes of a sequence.
+Figure 8 demonstrates the evolution of each of these values
+averaged over 1,051 generated sequences (one sequence per testing
+set lyrics).
+For pitch-related attributes, the proposed model outperforms the
+baseline in every aspect and outperforms MLE in most aspects. The
+proposed model tends to converge to a value which is relatively close
+to the ground truth (i.e. the average value from the dataset). However,
+the 2-MIDI numbers and 3-MIDI numbers repetitions converge to
+values which are signiﬁcantly lower than the corresponding mea-
+surement over the dataset, but is still much better than that of MLE
+baseline.
+For metrics which are related to temporal attributes (i.e. note
+duration and rest duration), the baselines are closer to the ground
+truth value. This is expected, since these metrics are nothing but an
+average of attributes which the baseline samples from the ground
+truth distribution. Hence, these values tend to the ground truth value
+as the number of generated examples increases. Table V shows the
+numerical values of the results.
+We also investigated scale-consistency of generated melodies. The
+mean accuracy of scale-consistency for the conditional LSTM-GAN
+model is 48.6%. In contrast, for the MLE baseline and Random
+baseline models, it is 47.3% and 46.6% respectively. The mean
+accuracy of scale-consistency is not high due to two main reasons: i)
+the mapping between lyrics and melody is not unique, i.e., for a given
+lyrics there can be multiple melodies belonging to different standard
+scales. ii) some notes overlap between different standard scales, e.g.,
+D,E,F,G,A appear in both Cmajor andDnatural minor .
+Another important attribute in music is the distribution of the
+transitions between MIDI numbers. Figure 9 shows the distributions
+of the transitions for the melodies generated by our model, the
+MLE and Random baseline models and the testing set. The melody
+generated by the proposed model approximates well the distribution
+of the human composed music. Although the testing set melody has
+a slightly higher transition from a note to a lower-pitched one, the
+melody generated by our model has more transitions from a note to
+a higher-pitched one.
+To compare the qualities of generated melodies, standard BLEU7
+Generator
+Input 20 (embedded syllable); 1 (melody-token representing triplet of music attributes)
+Layer 1 32, Embedding Layer (for embedding a melody-token)
+Layer 2 32, LSTM, tanh
+Output 3397, fully-connected, log-softmax; 3 (predicted triplet of music attributes)
+TABLE IV: Conﬁguration of MLE baseline.
+Fig. 6: Generated songs by generators trained for 1, 51 and 351 epochs respectively.
+Ground truth Conditional LSTM-GAN MLE baseline Random baseline
+MIDI numbers span 10.8 7.7 14.2 18.1
+3-MIDI numbers repetitions 3.8 2.9 2.2 0.4
+2-MIDI numbers repetitions 7.4 7.7 5.9 2.3
+Number of Unique MIDI 5.9 5.1 6.5 9.0
+Number of notes without rest 15.6 16.7 15.4 15.6
+Average rest value within song 0.8 0.6 0.8 0.8
+Song length 43.3 39.2 43.4 43.6
+TABLE V: In-songs attributes metrics evaluation.
+scores as evaluation metrics3for conditional LSTM-GAN, MLE
+baseline, and Random baseline are respectively calculated, which are
+shown in Table VI. From this table, we can ﬁnd that our conditional
+LSTM-GAN model achieves the highest BLEU scores compared with
+the other two baseline methods. This also concludes that our method
+can generate melodies of relatively higher qualities.
+F . Effect of lyrics conditioning
+1) Distribution of MIDI numbers: The experiments show that the
+proposed LSTM-GAN model without conditioning on lyrics leads
+to a model which generates a narrower-band distribution of MIDI
+number as shown in Fig. 10. Here are the MIDI number distributions,
+which are smoothed by using kernel density estimation. It is obvious
+3https://en.wikipedia.org/wiki/BLEUScores BLEU-2 BLEU-3 BLEU-4
+Random baseline 0.499 0.157 0.036
+MLE baseline 0.659 0331 0.137
+Conditional LSTM-GAN 0.735 0.460 0.230
+TABLE VI: BLEU scores for Random and MLE baseline methods
+and proposed conditional LSTM-GAN.
+in Fig. 11 that the estimated distribution of generated MIDI numbers
+conditioned on lyrics is more consistent with the distribution of
+ground truth MIDI numbers.
+An example of the inﬂuence of lyrics on the generated MIDI
+numbers is shown in Fig. 12. Given two kinds of lyrics, 1,000 songs
+are generated for each lyrics, and the distribution of the generated
+MIDI numbers is estimated. In our example, the second lyrics leads8
+(a) Model trained for 1 epoch
+(b) Model trained for 51 epochs
+(c) Model trained for 351 epochs
+Fig. 7: Different sheet music trained for 1, 51 and 351 epochs
+respectively.
+to songs with lower MIDI numbers than the ﬁrst one, which helps to
+deliver some semantic information latent in the lyrics.
+2) Note duration and rest duration: In this experiment, an evalu-
+ation method to seeing if the lyrics conditioning has an effect on the
+generated note duration and rest duration is presented. The following
+focuses on note duration attribute, but the same is valid for rest
+duration as well.
+LetD2RNMbe a matrix composed of N note duration (or
+note rest) sequences of M note durations, where each sequence is
+taken from a different song from a N songs dataset used to train a
+generator G. Therefore, Di;jis thej-th note duration of the i-th song.
+LetG2RNMbe a matrix composed of note duration sequences
+generated by G by feeding the syllables sequences corresponding to
+each row of D. This means that Gi;jis thej-th note duration of the
+sequence generated by G when the syllables corresponding to diare
+fed to it, where didenotes thei-th row ofD.
+Let randrow ()be an operator which randomizes the order of the
+row of a matrix. Therefore Drs=randrow (D)can be seen as a
+matrix with correct in-sequence note duration order, but wrong song
+order when compared to D.Drn= 
+randrow (DT)Tcan be seen as
+a matrix for which the song order is the same as D’s, but the note
+duration sequences are randomized. Finally, Drns=randrow (Drn)
+can be seen as a matrix in which both the song and note order
+are randomized when compared to D. The subscripts rs,rnand rns
+denote “random songs”, “random notes”, and “random notes + songs”
+respectively. Since randrow ()is a random operator, Drs,Drn,Drns
+are matrices of random variables (random matrices).
+In this experiment, d=1
+NMkD GkF(which is a real value)
+is compared to the distribution of the random variables drs=
+1
+NMkDrs GkF,drn=1
+NMkDrn GkFanddrns=1
+NMkDrns GkF,
+withN= 1;051(number of songs in testing set) and M= 20 . The
+experiment is made on the testing set.
+Results are shown in Fig. 13 (note duration), and Fig. 14 (rest
+duration). The three distributions are estimated using 10,000 samples
+for each random variable. In each case, dis statistically lower than the
+mean value, indicating Glearned useful correlation between syllable
+embeddings and note/rest durations.G. Subjective evaluation
+4 different lyrics are randomly selected from the ground truth
+dataset. Accordingly, 16 melodies are obtained by using Random
+baseline, MLE baseline, our model, and ground truth. These melodies
+can be downloaded from the link4.
+All melodies are sung by a female voice produced by synthesizer V
+[35]. 4 male and 3 female subjects without knowing our research and
+any musical knowledge were invited to listen to these 16 melodies,
+where each melody with around 20 seconds is played 2 times in a
+random order. Three questions as metrics are used for evaluation:
+how about the entire melody? how about the rhythm? and does the
+melody ﬁt the lyrics well? The subjects are asked to give a score
+from 1 to 5 (where 1 corresponds to “very bad”, 2 to “bad”, 3 to
+“OK”, 4 to “good” and 5 to “very good”).
+The ﬁrst run is taken to enable subjects to get used to the type of
+melodies they were listening to. The scores of evaluation metrics are
+respectively averaged based on listening results of Random baseline,
+MLE baseline, our model, and ground truth on the second run.
+Evaluation results are shown in Figure 15. It is obvious that
+the melodies generated by the proposed model are closer to the
+ones composed by humans than the baseline in each metric. This
+also veriﬁes the proposed conditional LSTM-GAN can predict the
+plausible sequential alignment relationship between syllables and
+notes. The feedback from subjects indicates that relatively low scores
+of melody evaluation are generated which might be due to the limited
+capability of the synthesizer for high pitches. From these results of
+all three metrics, we also can ﬁnd there still are the gaps between
+melodies generated by our model and ones from human composition,
+which tells us there is much space we can investigate to improve
+capability of neural melody generation.
+VII. C ONCLUSION AND FUTURE WORK
+Melody generation from lyrics in music and AI is still unexplored
+well. Making use of deep learning techniques for melody generation
+is a very interesting research area, with the aim of understanding
+music creative activities of human. Several contributions are done
+in this work: i) the largest paired English lyrics-melody dataset
+is built to facilitate the learning of alignment relationship between
+lyrics and melody. This dataset is very useful for the area of melody
+generation. ii) a skip-gram model is trained to exact lyrics embedding
+vectors, which can be taken as a lyrics2vec model for English
+lyrics feature extraction. iii) Conditional LSTM-GAN is proposed to
+model sequential alignment relationship between lyrics and melody,
+followed by a tuning scheme that has the capability of constraining
+a continuous-valued sequence to the closest in-tune discrete-valued
+sequence. iv) Evaluation method of melody generation is suggested to
+demonstrate the effectiveness of our proposed deep generative model.
+The continuous-valued sequence generated by the generator needs
+to be constrained to the underlying musical representation of discrete-
+valued MIDI attributes. Due to the quantization error, the generated
+note could be associated to an improper duration, which would
+destroy the rhythm. But this probability could be low after apply-
+ing LSTM in the melody generation. In the future, we plan to
+apply Gumbel-Softmax relaxation technique [36] to train a lyrics-
+conditioned LSTM-GAN for the discrete generation of music at-
+tributes.
+In addition, several interesting future works will be investigated as
+follow: i) How to compose a melody with the sketch of uncomplete
+lyrics, ii) how to compose a polyphonic melody with lyrics, and iii)
+how to predict lyrics when given a melody as a condition.
+4https://drive.google.com/ﬁle/d/1ugOwfBsURax1VQ4jHmI8P3ldE5xdDj0l/
+view?usp=sharing9
+Fig. 8: Music-related measurements.
+Fig. 9: Distribution of transitions.
+Fig. 10: Estimated distribution of generated MIDI numbers (no
+conditioning on lyrics).
+REFERENCES
+[1] G. A. Wiggins, “A preliminary framework for description, analysis and
+comparison of creative systems,” Journal of Knowledge Based Systems ,
+vol. 19, no. 7, pp. 449–458, 2006.[2] L. A. Hiller and L. M. Isaacson, “Musical composition with a high-speed
+digital computer,” Journal of the Audio Engineering Society , vol. 6, no. 3,
+pp. 154–160, 1958.
+[3] D. Ponsford, G. Wiggins, and C. Mellish, “Statistical learning of
+harmonic movement,” Journal of New Music Research , vol. 28, no. 2,
+pp. 150–177, 1999.
+[4] J. Briot and F. Pachet, “Music generation by deep learning - challenges
+and directions,” CoRR , vol. abs/1712.04371, 2017. [Online]. Available:
+http://arxiv.org/abs/1712.04371
+[5] Y . Yu, S. Tang, F. Raposo, and L. Chen, “Deep cross-modal correlation
+learning for audio and lyrics in music retrieval,” ACM Trans. Multimedia
+Comput. Commun. Appl. , vol. 15, no. 1.
+[6] https://en.wikipedia.org/wiki/Melody.
+[7] M. Scirea, G. A. B. Barros, N. Shaker, and J. Togelius, “Smug: Scientiﬁc
+music generator,” in Sixth International Conference on Computational
+Creativity , 2015, pp. 204–211.
+[8] M. Ackerman and D. Loker, “Algorithmic songwriting with ALYSIA,”
+CoRR , vol. abs/1612.01058, 2016. [Online]. Available: http://arxiv.org/
+abs/1612.01058
+[9] H. Bao, S. Huang, F. Wei, L. Cui, Y . Wu, C. Tan, S. Piao, and M. Zhou,
+“Neural melody composition from lyrics,” CoRR , vol. abs/1809.04318,
+2018. [Online]. Available: http://arxiv.org/abs/1809.04318
+[10] I. J. Goodfellow, J. Pouget-Abadie, M. Mirza, B. Xu, D. Warde-10
+Fig. 11: Left: estimated distribution of generated MIDI numbers conditioned on lyrics. Right: estimated distribution of ground truth MIDI
+numbers.
+Fig. 12: Estimated distributions of MIDI numbers generated by two
+different lyrics. Lyrics 1 are taken from the song It Must Have Been
+Love (Christmas for the Broken Hearted) by Roxette (written by Per
+Gessle). Lyrics 2 are taken from Love’s Divine by Seal (written by
+Mark Batson and Sealhenry Samuel).
+Fig. 13: Boxplots of the distributions of drs,drnanddrns(For the
+note duration attribute). d= 0:788 is highlighted in red in each
+boxplot. Mean values are rs= 0:802,rn= 0:801andrns= 0:802
+respectively.
+Farley, S. Ozair, A. Courville, and Y . Bengio, “Generative Adversarial
+Networks,” arXiv e-prints , 2014.
+[11] J. D. F. Rodriguez and F. J. Vico, “AI methods in algorithmic compo-
+sition: A comprehensive survey,” CoRR , vol. abs/1402.0585, 2014.
+[12] T. Anders and E. R. Miranda, “Constraint programming systems for
+modeling music theories and composition,” ACM Comput. Surv.
+[13] M. Delgado, W. Fajardo, and M. Molina-Solana, “Inmamusys: Intelligent
+multiagent music system,” Expert Syst. Appl.
+[14] D. Conklin, “Music generation from statistical models,” in SAISB
+Symposium on Artiﬁcial Intelligence and Creativity in the Arts and
+Sciences , 2003, pp. 30–35.
+[15] A. Eigenfeldt and P. Pasquier, “Realtime generation of harmonic progres-
+sions using controlled markov selection,” in International Conference on
+Fig. 14: Boxplots of the distributions of drs,drnanddrns(for the
+rest duration attribute). d= 1:336 is highlighted in red in each
+boxplot. Mean values are rs= 1:404,rn= 1:407andrns= 1:404
+respectively.
+Computational Creativity , 2010, pp. 16–25.
+[16] D. Cope, Computer Models of Musical Creativity . The MIT Press,
+2005.
+[17] J. Wu, C. Hu, Y . Wang, X. Hu, and J. Zhu, “A hierarchical re-
+current neural network for symbolic melody generation,” CoRR , vol.
+abs/1712.05274, 2017.
+[18] D. D. Johnson, “Generating polyphonic music using tied parallel net-
+works,” in International Conference on Evolutionary and Biologically
+Inspired Music and Art , 2017, pp. 128–143.
+[19] O. Mogren, “C-RNN-GAN: continuous recurrent neural networks with
+adversarial training,” CoRR , vol. abs/1611.09904, 2016.
+[20] S. Fukayama, K. Nakatsuma, S. Sako, T. Nishimoto, and S. Sagayama,
+“Automatic song composition from the lyrics exploiting prosody of the
+japanese language,” in International Conference of Sound and Music
+Computing , 2010, pp. 299–302.
+[21] K. Monteith, T. R. Martinez, and D. Ventura, “Automatic generation
+of melodic accompaniments for lyrics,” in Proceedings of the Third
+International Conference on Computational Creativity, 2012. , 2012, pp.
+87–94.
+[22] http://www.musiccrashcourses.com/lessons/pitch.html/.
+[23] [Online]. Available: https://en.wikipedia.org/wiki/Duration (music)/
+[24] [Online]. Available: https://en.wikipedia.org/wiki/Rest (music)/
+[25] https://en.wikipedia.org/wiki/Syllable.
+[26] S. Hochreiter and J. Schmidhuber, “Long short-term memory,” Neural
+Computation , vol. 9, no. 8, pp. 1735–1780, 1997. [Online]. Available:
+https://doi.org/10.1162/neco.1997.9.8.1735
+[27] M. Mirza and S. Osindero, “Conditional generative adversarial
+nets,” CoRR , vol. abs/1411.1784, 2014. [Online]. Available: http:
+//arxiv.org/abs/1411.1784
+[28] https://colinraffel.com/projects/lmd/.
+[29] https://www.reddit.com/r/datasets/.
+[30] A. Smola, A. Gretton, L. Song, and B. Sch ¨olkopf, “A hilbert space
+embedding for distributions,” in Algorithmic Learning Theory , M. Hutter,
+R. A. Servedio, and E. Takimoto, Eds. Springer Berlin Heidelberg,
+2007.11
+Fig. 15: Subjective evaluation results.
+[31] W. Bounliphone, E. Belilovsky, M. B. Blaschko, I. Antonoglou, and
+A. Gretton, “A Test of Relative Similarity For Model Selection in
+Generative Models,” arXiv e-prints , 2015.
+[32] S. J. Reddi, A. Ramdas, B. Poczos, A. Singh, and L. Wasserman, 2014.
+[33] H.-P. Lee, J.-S. Fang, and W.-Y . Ma, “iComposer: An automatic song-
+writing system for Chinese popular music,” in Proceedings of the 2019
+Conference of the North American Chapter of the Association for
+Computational Linguistics (Demonstrations) .
+[34] L. Yu, W. Zhang, J. Wang, and Y . Yu, “Seqgan: Sequence generative
+adversarial nets with policy gradient,” 2016.
+[35] https://synthesizerv.com/en/.
+[36] E. Jang, S. Gu, and B. Poole, “Categorical reparameterization with
+gumbel-softmax,” 2016.
